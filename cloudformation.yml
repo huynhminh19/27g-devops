@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Create an AWS EC2 instance with a Nginx service
+
+Parameters:
+  AzName:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: Select Availability Zone
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Select VPC
+
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Select subnet
+
+  SGWebCidr:
+    Type: String
+    Description: The CIDR address range that can browse to the EC2 instance
+    MinLength: 9
+    MaxLength: 18
+    Default: "0.0.0.0/0"
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
+
+  LatestAmazonLinux2AmiId:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+
+Resources:
+  SGWeb:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP/HTTPS access via port 22
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '80'
+        ToPort: '80'
+        CidrIp: !Ref SGWebCidr
+      - IpProtocol: tcp
+        FromPort: '443'
+        ToPort: '443'
+        CidrIp: !Ref SGWebCidr
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: !Ref SGWebCidr
+      VpcId: !Ref VpcId
+
+  NginxInstance:
+    Type: AWS::EC2::Instance
+
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+
+    Properties:
+      AvailabilityZone: !Ref AzName
+      ImageId: !Ref LatestAmazonLinux2AmiId
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: t2.small
+      Monitoring: 'true'
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: 'true'
+        DeviceIndex: '0'
+        GroupSet:
+        - !Ref SGWeb
+        SubnetId: !Ref SubnetId
+      Tenancy: default
+
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          services:
+            sysvinit:
+              nginx:
+                enabled: "true"
+                ensureRunning: "true"
+                files:
+                  - "/etc/nginx/nginx.conf"
+                  - "/var/www/html/index.html":
+                    content: !Sub |
+                      <!DOCTYPE html>
+                      <html>
+                      <body>
+
+                      <h1>hello world</h1>
+
+                      </body>
+                      </html>
+                sources:
+                  - "/var/www/html"
+
+Outputs:
+  NginxInstanceId:
+    Description: NginxInstance Instance Id
+    Value: !Ref NginxInstance
+
+  NginxInstanceIP:
+    Description: NginxInstance IP Address
+    Value: !GetAtt NginxInstance.PublicIp
