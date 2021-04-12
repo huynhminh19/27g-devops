@@ -71,26 +71,58 @@ Resources:
 
     Metadata:
       AWS::CloudFormation::Init:
-        config:
-          services:
-            sysvinit:
-              nginx:
-                enabled: "true"
-                ensureRunning: "true"
-                files:
-                  - "/etc/nginx/nginx.conf"
-                  - "/var/www/html/index.html":
-                    content: !Sub |
-                      <!DOCTYPE html>
-                      <html>
-                      <body>
+          configSets:
+              InstallAndConfig:
+                  - Install
+                  - Configure
+          Install:
+              packages:
+                  yum:
+                      nginx: []
+              files:
+                 /usr/share/nginx/index.html:
+                  content: !
+                      "<title>Hello</title><h1>world</h1>"
+                  mode: '000644'
+                  owner: root
+                  group: root
 
-                      <h1>hello world</h1>
+                  /etc/cfn/cfn-hup.conf:
+                      content: !Sub |
+                          [main]
+                          stack=${AWS::StackId}
+                          region=${AWS::Region}
+                          interval=1
+                  mode: '000400'
+                  owner: root
+                  group: root
 
-                      </body>
-                      </html>
-                sources:
-                  - "/var/www/html"
+                  /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+                      content: !Sub |
+                          [cfn-auto-reloader-hook]
+                          triggers=post.update
+                          path=Resources.Amazon Linux w/ nginx included.Metadata.AWS::CloudFormation::Init
+                          action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource Amazon Linux w/ nginx included --region ${AWS::Region} --configsets InstallAndConfig
+                          runas=root
+                  mode: '00400'
+                  owner: root
+                  group: root
+
+              services:
+                  sysvinit:
+                      nginx:
+                          enabled: 'true'
+                          ensureRunning: 'true'
+                          files:
+                              - "/usr/share/nginx/index.html"
+                          sources:
+                              - "/etc/nginx/nginx.conf"
+                      cfn-hup:
+                          enabled: 'true'
+                          ensureRunning: 'true'
+                          files:
+                              - /etc/cfn/cfn-hup.conf
+                              - /etc/cfn/hooks.d/cfn-auto-reloader.conf
 
 Outputs:
   NginxInstanceId:

@@ -23,8 +23,8 @@ resource "aws_security_group" "sg_22" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    "Environment" = "${var.environment_tag}"
+  tags = {
+    Environment = "${var.environment_tag}"
   }
 }
 
@@ -46,12 +46,12 @@ resource "aws_security_group" "sg_80" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    "Environment" = "${var.environment_tag}"
+  tags = {
+    Environment = "${var.environment_tag}"
   }
 }
 
-resource "aws_security_group" "sg_80" {
+resource "aws_security_group" "sg_443" {
   name = "sg_443"
   vpc_id = "${var.vpc_id}"
 
@@ -69,7 +69,7 @@ resource "aws_security_group" "sg_80" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    "Environment" = "${var.environment_tag}"
+  tags = {
+    Environment = "${var.environment_tag}"
   }
 }

@@ -15,7 +15,7 @@ variable "subnet_public_id" {
 }
 variable "security_group_ids" {
   description = "EC2 ssh security group"
-  type = "list"
+  type = list(string)
   default = []
 }
 variable "environment_tag" {
@@ -28,6 +28,7 @@ variable "key_pair_name" {
 }
 variable "instance_ami" {
   description = "EC2 instance ami"
+  default = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
 variable "instance_type" {
   description = "EC2 instance type"

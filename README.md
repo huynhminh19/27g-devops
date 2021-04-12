@@ -23,3 +23,7 @@ terraform destroy
 Then run ansible to provision webserver servers.
 
 Ansible command: ansible-playbook playbook.yml
+
+## Solution 3 : using Nginx Docker image
+
+Using CloudFormation or Terraform, then setup NGINX as Web server, and for simplify installation, use Docker.
