@@ -51,10 +51,6 @@ Resources:
   NginxInstance:
     Type: AWS::EC2::Instance
 
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT15M
-
     Properties:
       AvailabilityZone: !Ref AzName
       ImageId: !Ref LatestAmazonLinux2AmiId
@@ -68,61 +64,47 @@ Resources:
         - !Ref SGWeb
         SubnetId: !Ref SubnetId
       Tenancy: default
+      UserData:
+          Fn::Base64:
+            !Sub |
+                #!/bin/bash -ex
+                amazon-linux-extras install epel
+                yum update -y aws-cfn-bootstrap
+                /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource NginxInstance --configsets bootstrap_install --region ${AWS::Region}
+                /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource NginxInstance --region ${AWS::Region}
+                yum install ansible -y
+                yum install nginx -y
+                yum install git -y
+                systemctl start nginx
+                systemctl enable nginx
 
     Metadata:
       AWS::CloudFormation::Init:
           configSets:
-              InstallAndConfig:
-                  - Install
-                  - Configure
-          Install:
-              packages:
-                  yum:
-                      nginx: []
-              files:
-                 /usr/share/nginx/index.html:
-                  content: !
-                      "<title>Hello</title><h1>world</h1>"
-                  mode: '000644'
-                  owner: root
-                  group: root
-
-                  /etc/cfn/cfn-hup.conf:
-                      content: !Sub |
-                          [main]
-                          stack=${AWS::StackId}
-                          region=${AWS::Region}
-                          interval=1
-                  mode: '000400'
-                  owner: root
-                  group: root
-
-                  /etc/cfn/hooks.d/cfn-auto-reloader.conf:
-                      content: !Sub |
-                          [cfn-auto-reloader-hook]
-                          triggers=post.update
-                          path=Resources.Amazon Linux w/ nginx included.Metadata.AWS::CloudFormation::Init
-                          action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource Amazon Linux w/ nginx included --region ${AWS::Region} --configsets InstallAndConfig
-                          runas=root
-                  mode: '00400'
-                  owner: root
-                  group: root
-
-              services:
-                  sysvinit:
-                      nginx:
-                          enabled: 'true'
-                          ensureRunning: 'true'
-                          files:
-                              - "/usr/share/nginx/index.html"
-                          sources:
-                              - "/etc/nginx/nginx.conf"
-                      cfn-hup:
-                          enabled: 'true'
-                          ensureRunning: 'true'
-                          files:
-                              - /etc/cfn/cfn-hup.conf
-                              - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+            bootstrap_install:
+              - prepare_system
+              - configure_nginx
+          prepare_system:
+            packages:
+              yum:
+                nginx: []
+          configure_nginx:
+            files:
+              /usr/share/nginx/html/index.html:
+                content: !Sub |
+                  <h1>Hello world</h1>
+                mode: '000644'
+                owner: root
+                group: root
+            services:
+              sysvinit:
+                nginx:
+                  enabled: "true"
+                  ensureRunning: "true"
+                  files:
+                    - "/etc/nginx/nginx.conf"
+                  sources:
+                    - "/var/www/html"
 
 Outputs:
   NginxInstanceId:

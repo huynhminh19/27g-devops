@@ -3,7 +3,7 @@
 variable "access_key" {}
 variable "secret_key" {}
 variable "region" {
-  default = "us-east-2"
+  default = "us-west-2"
 }
 variable "vpc_id" {
   description = "VPC id"
@@ -28,7 +28,7 @@ variable "key_pair_name" {
 }
 variable "instance_ami" {
   description = "EC2 instance ami"
-  default = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+  default = "ami-0518bb0e75d3619ca"
 }
 variable "instance_type" {
   description = "EC2 instance type"

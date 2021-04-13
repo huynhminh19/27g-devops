@@ -3,10 +3,10 @@
 variable "access_key" {}
 variable "secret_key" {}
 variable "region" {
-  default = "us-east-2"
+  default = "us-west-2"
 }
 variable "availability_zone" {
-  default = "us-east-2a"
+  default = "us-west-2a"
 }
 variable "cidr_block_range" {
   description = "The CIDR block for the VPC"
@@ -26,5 +26,5 @@ variable "environment_tag" {
 }
 variable "public_key_path" {
   description = "Public key path"
-  default = ""
+  default = "~/.ssh/id_rsa.pub"
 }
