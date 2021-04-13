@@ -27,5 +27,7 @@ Ansible command: ansible-playbook playbook.yml
 ## Solution 3 : using Nginx Docker image
 
 Using CloudFormation or Terraform, then setup NGINX as Web server, and for simplify installation, use Docker.
+
 docker pull nginx
+
 docker run --name some-nginx -v /some/content:/usr/share/nginx/html:ro -d nginx
